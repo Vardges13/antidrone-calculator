@@ -1,0 +1,152 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Калькулятор защиты объекта от БПЛА — DRONEBLOCK</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0f14;--card:#121821;--card2:#0f141c;--line:#1f2937;--txt:#e8edf4;--mut:#8b98a9;--acc:#59d18f;--acc2:#3aa968;--warn:#ffb84d}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:Manrope,Arial,sans-serif;padding:24px;max-width:1080px;margin:0 auto}
+.logo{font-weight:800;letter-spacing:3px;font-size:14px;color:var(--mut)}.logo b{color:var(--acc)}
+h1{font-size:26px;margin:14px 0 6px}.sub{color:var(--mut);font-size:13px;margin-bottom:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+.card h2{font-size:13px;letter-spacing:2px;color:var(--acc);text-transform:uppercase;margin-bottom:12px}
+.row{display:flex;gap:14px;flex-wrap:wrap}
+.f{flex:1;min-width:200px}
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:6px}
+select,input[type=number]{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:11px 12px;font-size:15px;font-family:inherit}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.val{font-size:18px;font-weight:700;color:var(--txt)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{cursor:pointer;border:1px solid var(--line);background:var(--card2);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--mut)}
+.chip.on{border-color:var(--acc);color:var(--txt);background:rgba(89,209,143,.08)}
+.lv{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:10px}
+.lv h3{font-size:15px;margin-bottom:4px}.lv p{font-size:12px;color:var(--mut);line-height:1.5}
+.opt{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.opt:last-child{border-bottom:none}
+.opt input{accent-color:var(--acc);width:17px;height:17px}
+.opt .p{margin-left:auto;color:var(--mut);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+td.r,th.r{text-align:right}
+.total{background:linear-gradient(135deg,rgba(89,209,143,.12),rgba(89,209,143,.03));border:1px solid rgba(89,209,143,.4);border-radius:14px;padding:18px;margin-top:6px}
+.total .t1{font-size:12px;color:var(--mut);letter-spacing:1px}
+.total .t2{font-size:28px;font-weight:800;margin:4px 0}
+.total .t3{font-size:12px;color:var(--mut)}
+.disc{font-size:11px;color:#5f6c7d;margin-top:14px;line-height:1.5}
+@media print{body{background:#fff;color:#000}.card{border-color:#ddd}}
+</style></head><body>
+<div class="logo">DRONE<b>BLOCK</b> · ООО «ПЕРСПЕКТИВА»</div>
+<h1>Калькулятор комплексной защиты объекта от БПЛА</h1>
+<div class="sub">Предварительный расчёт бюджета по параметрам объекта. Точная смета — после обследования. Цены — рыночные ориентиры (сентябрь 2026), редактируются в один блок.</div>
+
+<div class="card"><h2>Шаг 1 · Объект</h2>
+<div class="row">
+<div class="f"><label>Тип объекта</label>
+<select id="type">
+<option value="sklad">Склад / логистический комплекс</option>
+<option value="prom">Промышленное предприятие</option>
+<option value="tek">Объект ТЭК (подстанция, резервуары)</option>
+<option value="azs">АЗС / АЗК</option>
+<option value="zdanie">Административное здание</option>
+<option value="terra">Открытая территория / техника</option>
+</select></div>
+<div class="f"><label>Уровень угрозы</label>
+<select id="threat">
+<option value="1">Низкий (удалён от границы, спокойный регион)</option>
+<option value="2" selected>Средний (регион с инцидентами)</option>
+<option value="3">Высокий (прифронтовая зона, критическая инфраструктура)</option>
+</select></div>
+</div></div>
+
+<div class="card"><h2>Шаг 2 · Параметры площадки</h2>
+<div class="row">
+<div class="f"><label>Площадь защиты в плане (купольная сетка): <span class="val" id="v_area"></span></label>
+<input type="range" id="area" min="200" max="40000" step="100" value="2500"></div>
+<div class="f"><label>Высота купола / укрытия: <span class="val" id="v_h"></span></label>
+<input type="range" id="h" min="4" max="30" step="1" value="12"></div>
+<div class="f"><label>Длина периметра: <span class="val" id="v_per"></span></label>
+<input type="range" id="per" min="100" max="4000" step="50" value="600"></div>
+<div class="f"><label>Критических зон (ворота, навесы, ГРЩ): <span class="val" id="v_zones"></span></label>
+<input type="range" id="zones" min="0" max="20" step="1" value="3"></div>
+</div></div>
+
+<div class="card"><h2>Шаг 3 · Уровни защиты</h2>
+<div class="chips">
+<div class="chip on" data-lv="1" onclick="tgl(this)">УРОВЕНЬ 1 · Механическая защита (сетки)</div>
+<div class="chip on" data-lv="2" onclick="tgl(this)">УРОВЕНЬ 2 · Обнаружение (детекторы, РЛС)</div>
+<div class="chip" data-lv="3" onclick="tgl(this)">УРОВЕНЬ 3 · Противодействие (РЭБ, перехват)</div>
+</div>
+
+<div class="lv" id="lv1"><h3>Уровень 1 — Механическая защита</h3>
+<p>Физический барьер: сетка останавливает/улавливает дрон до цели. Работает без разрешений и электричества. СП 542.1325800.2024.</p>
+<div class="opt"><input type="checkbox" id="o_dome" checked><label for="o_dome">Купольная сетка над зоной (полиамид, каркас оцинк., монтаж)</label><span class="p" id="p_dome"></span></div>
+<div class="opt"><input type="checkbox" id="o_perim" checked><label for="o_perim">Периметральный экран (сетка по периметру, h=6 м)</label><span class="p" id="p_perim"></span></div>
+<div class="opt"><input type="checkbox" id="o_moln"><label for="o_moln">Молниезащита и заземление металлоконструкций</label><span class="p" id="p_moln"></span></div>
+</div>
+
+<div class="lv" id="lv2"><h3>Уровень 2 — Обнаружение</h3>
+<p>Раннее оповещение: радиочастотные детекторы ловят включение пульта до взлёта, РЛС ведёт цель на подлёте.</p>
+<div class="opt"><input type="checkbox" id="o_rf"><label for="o_rf">Радиочастотные детекторы (по периметру, круговые)</label><span class="p" id="p_rf"></span></div>
+<div class="opt"><input type="checkbox" id="o_rls"><label for="o_rls">РЛС обнаружения БПЛА (зона подлёта, автосопровождение)</label><span class="p" id="p_rls"></span></div>
+<div class="opt"><input type="checkbox" id="o_video"><label for="o_video">Видеоподтверждение + АРМ оператора</label><span class="p" id="p_video"></span></div>
+</div>
+
+<div class="lv" id="lv3"><h3>Уровень 3 — Противодействие</h3>
+<p>Принуждение к посадке и перехват. Требует согласования применения РЭБ (помогаем с оформлением).</p>
+<div class="opt"><input type="checkbox" id="o_reb"><label for="o_reb">Стационарный РЭБ-купол (подавление упр. и навигации, 500–900 м)</label><span class="p" id="p_reb"></span></div>
+<div class="opt"><input type="checkbox" id="o_int"><label for="o_int">Пост дронов-перехватчиков (перехват при подлёте)</label><span class="p" id="p_int"></span></div>
+<div class="opt"><input type="checkbox" id="o_port"><label for="o_port">Портативные прерыватели для смен охраны</label><span class="p" id="p_port"></span></div>
+</div>
+</div>
+
+<div class="card"><h2>Смета (предварительная)</h2>
+<table id="tbl"><thead><tr><th>Позиция</th><th class="r">Объём</th><th class="r">Бюджет, ₽ (вилка)</th></tr></thead><tbody></tbody></table>
+<div class="total"><div class="t1">ИТОГО ПРЕДВАРИТЕЛЬНО</div><div class="t2" id="itog"></div><div class="t3" id="sroki"></div></div>
+<div class="disc">* Расчёт предварительный (±30%), выполнен по открытым рыночным ценам (сент. 2026): сетка 1,8–6 тыс ₽/м², купол ×1,3; РЭБ-купол класса «Барьер РИ Купол-С» ≈ 3,98 млн ₽; и т.д. Точная стоимость — после обследования объекта и модель угроз. РЭБ-контур согласовывается отдельно. Расчёт не является публичной офертой. ООО «ПЕРСПЕКТИВА» · droneblock.ru · +7 (930) 851-16-66</div>
+</div>
+
+<script>
+const R=v=>Math.round(v).toLocaleString('ru-RU');
+const P={ // цены: [min,max]
+ net: [1800, 3200], netKev: [3000, 6000], frame: [3000, 6500], domeK: 1.3,
+ perimH: 6, rf: [500000, 1400000], rls: [3000000, 9000000], video: [500000, 1500000],
+ reb: [3500000, 5200000], int: [2000000, 8000000], port: [150000, 500000], moln: [90000, 350000]
+};
+const id=x=>document.getElementById(x);
+function on(x){return id(x).checked}
+function lvl(n){return document.querySelector(`.chip[data-lv="${n}"]`).classList.contains('on')}
+function tgl(el){el.classList.toggle('on');calc()}
+['area','h','per','zones'].forEach(k=>id(k).addEventListener('input',calc));
+id('threat').addEventListener('change',calc);
+['o_dome','o_perim','o_moln','o_rf','o_rls','o_video','o_reb','o_int','o_port'].forEach(k=>id(k).addEventListener('change',calc));
+function calc(){
+ const area=+id('area').value, h=+id('h').value, per=+id('per').value, zones=+id('zones').value, th=+id('threat').value;
+ id('v_area').textContent=R(area)+' м²'; id('v_h').textContent=h+' м'; id('v_per').textContent=R(per)+' м'; id('v_zones').textContent=zones;
+ const rows=[]; let mn=0,mx=0;
+ const add=(name,vol,a,b)=>{rows.push([name,vol,a,b]);mn+=a;mx+=b};
+ if(lvl(1)){
+  if(on('o_dome')){const netMin=(area*1.3)*(P.net[0]*.35+P.frame[0]*.65), netMax=(area*1.3)*(P.net[1]*.35+P.frame[1]*.65); add('Купольная сетка над зоной (сетка+каркас+монтаж)',R(area*1.3)+' м²',Math.round(netMin),Math.round(netMax))}
+  if(on('o_perim')){const a=per*P.perimH*P.net[0]*1.15,b=per*P.perimH*P.net[1]*1.15; add('Периметральный экран, h=6 м (полотно+стойки+монтаж)',R(per*6)+' м²',Math.round(a),Math.round(b))}
+  if(on('o_moln'))add('Молниезащита и заземление','комплекс',P.moln[0],P.moln[1]);
+ }
+ if(lvl(2)){
+  if(on('o_rf')){const n=Math.max(1,Math.ceil(per/400)); add('РЧ-детекторы БПЛА (круговые, раннее оповещение)',n+' шт',n*P.rf[0],n*P.rf[1])}
+  if(on('o_rls')){const n=Math.max(1,Math.ceil(per/1200)); add('РЛС обнаружения и сопровождения БПЛА',n+' шт',n*P.rls[0],n*P.rls[1])}
+  if(on('o_video'))add('Видеоподтверждение цели + АРМ оператора','комплекс',P.video[0],P.video[1]);
+ }
+ if(lvl(3)){
+  if(on('o_reb')){const n=Math.max(1,Math.ceil(per/900)+ (th>=3?1:0)); add('РЭБ-купол: подавление упр. и навигации',n+' компл.',n*P.reb[0],n*P.reb[1])}
+  if(on('o_int')){const n=zones>5||th===3?2:1; add('Пост дронов-перехватчиков',n+' пост',n*P.int[0],n*P.int[1])}
+  if(on('o_port')){const n=Math.max(2,Math.ceil(per/800)*2); add('Портативные прерыватели (смены охраны)',n+' шт',n*P.port[0],n*P.port[1])}
+ }
+ if(!rows.length)rows.push(['Выберите хотя бы одну опцию защиты','—',0,0]);
+ const tb=document.querySelector('#tbl tbody'); tb.innerHTML='';
+ rows.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${r[0]}</td><td class="r" style="color:var(--mut)">${r[1]}</td><td class="r">${R(r[2])} – ${R(r[3])}</td>`;tb.appendChild(tr)});
+ id('itog').textContent=`${R(mn)} – ${R(mx)} ₽`;
+ const wks= lvl(1)&&!lvl(2)&&!lvl(3)?'4–8 недель':(lvl(3)?'8–16 недель':'6–12 недель');
+ id('sroki').textContent=`Сроки реализации: ${wks} (сетка быстрее всего; РЭБ — с учётом согласования) · Уровень угрозы учтён коэффициентом комплектации`;
+}
+calc();
+</script>
+</body></html>
