@@ -34,7 +34,24 @@ td.r,th.r{text-align:right}
 .total .t2{font-size:28px;font-weight:800;margin:4px 0}
 .total .t3{font-size:12px;color:var(--mut)}
 .disc{font-size:11px;color:#5f6c7d;margin-top:14px;line-height:1.5}
-@media print{body{background:#fff;color:#000}.card{border-color:#ddd}}
+.actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{flex:1;min-width:150px;background:var(--acc);color:#08130d;border:none;border-radius:12px;padding:14px 16px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.2px}
+.btn:active{transform:scale(.97)}
+.btn2{background:var(--warn);color:#1a1206}
+.btn3{background:#1c2633;color:var(--txt);border:1px solid var(--line)}
+#printarea{display:none}
+@media print{
+ body{background:#fff;color:#000;max-width:100%;padding:0}
+ body>*:not(#printarea){display:none!important}
+ #printarea{display:block!important;font-family:Manrope,Arial,sans-serif;color:#000}
+ #printarea h2{font-size:16pt;margin-bottom:4pt}
+ #printarea table{width:100%;border-collapse:collapse;font-size:10pt}
+ #printarea td,#printarea th{border:1px solid #999;padding:6px 8px;text-align:left}
+ #printarea th{background:#eee}
+ #printarea .ptotal{font-size:14pt;font-weight:800;margin-top:10pt}
+ #printarea .pmeta{font-size:10pt;color:#333;margin-bottom:8pt}
+ #printarea .pfoot{font-size:8.5pt;color:#555;margin-top:14pt}
+}
 </style></head><body>
 <div class="logo">DRONE<b>BLOCK</b> · ООО «ПЕРСПЕКТИВА»</div>
 <h1>Калькулятор комплексной защиты объекта от БПЛА</h1>
@@ -103,11 +120,15 @@ td.r,th.r{text-align:right}
 <div class="card"><h2>Смета (предварительная)</h2>
 <table id="tbl"><thead><tr><th>Позиция</th><th class="r">Объём</th><th class="r">Бюджет, ₽ (вилка)</th></tr></thead><tbody></tbody></table>
 <div class="total"><div class="t1">ИТОГО ПРЕДВАРИТЕЛЬНО</div><div class="t2" id="itog"></div><div class="t3" id="sroki"></div></div>
+<div class="actions"><button class="btn" onclick="doPrint()">🖨 Распечатать смету</button><button class="btn btn2" onclick="doShare()">📤 Поделиться сметой</button><button class="btn btn3" id="copybtn" onclick="doCopy()">📋 Копировать</button></div>
 <div class="disc">* Расчёт предварительный (±30%), выполнен по открытым рыночным ценам (сент. 2026): сетка 1,8–6 тыс ₽/м², купол ×1,3; РЭБ-купол класса «Барьер РИ Купол-С» ≈ 3,98 млн ₽; и т.д. Точная стоимость — после обследования объекта и модель угроз. РЭБ-контур согласовывается отдельно. Расчёт не является публичной офертой. ООО «ПЕРСПЕКТИВА» · droneblock.ru · +7 (930) 851-16-66</div>
 </div>
 
+ <div id="printarea"></div>
 <script>
 const R=v=>Math.round(v).toLocaleString('ru-RU');
+const TYPES={sklad:'Склад / логистический комплекс',prom:'Промышленное предприятие',tek:'Объект ТЭК (подстанция, резервуары)',azs:'АЗС / АЗК',zdanie:'Административное здание',terra:'Открытая территория / техника'};
+const THREATS={1:'Низкий',2:'Средний',3:'Высокий'};
 const P={ // цены: [min,max]
  net: [1800, 3200], netKev: [3000, 6000], frame: [3000, 6500], domeK: 1.3,
  perimH: 6, rf: [500000, 1400000], rls: [3000000, 9000000], video: [500000, 1500000],
@@ -146,7 +167,19 @@ function calc(){
  id('itog').textContent=`${R(mn)} – ${R(mx)} ₽`;
  const wks= lvl(1)&&!lvl(2)&&!lvl(3)?'4–8 недель':(lvl(3)?'8–16 недель':'6–12 недель');
  id('sroki').textContent=`Сроки реализации: ${wks} (сетка быстрее всего; РЭБ — с учётом согласования) · Уровень угрозы учтён коэффициентом комплектации`;
+ window.__rows=rows;window.__mn=mn;window.__mx=mx;window.__ctx={area,h,per,zones,th};
+ buildPrint(rows,mn,mx);
 }
+function ctxLine(){const c=window.__ctx;return `Тип объекта: ${TYPES[id('type').value]} · Угроза: ${THREATS[id('threat').value]} · Площадь: ${R(c.area)} м² · Высота: ${c.h} м · Периметр: ${R(c.per)} м · Критических зон: ${c.zones}`}
+function buildPrint(rows,mn,mx){
+ const tr=rows.map(r=>`<tr><td>${r[0]}</td><td style="text-align:right">${r[1]}</td><td style="text-align:right">${R(r[2])} – ${R(r[3])} ₽</td></tr>`).join('');
+ id('printarea').innerHTML=`<h2>Смета комплексной защиты объекта от БПЛА <span style="font-weight:400;font-size:10pt">(предварительная, ${new Date().toLocaleDateString('ru-RU')})</span></h2><div class="pmeta">DRONEBLOCK · ООО «ПЕРСПЕКТИВА»<br>${ctxLine()}</div><table><tr><th>Позиция</th><th>Объём</th><th>Бюджет, ₽ (вилка)</th></tr>${tr}</table><div class="ptotal">ИТОГО: ${R(mn)} – ${R(mx)} ₽</div><div class="pmeta">Сроки: ${id('sroki').textContent}</div><div class="pfoot">Расчёт предварительный (±30%), не является публичной офертой. Точная стоимость — после обследования объекта. РЭБ-контур согласовывается в установленном порядке.<br>ООО «ПЕРСПЕКТИВА» · droneblock.ru · +7 (930) 851-16-66 · info@droneblock.ru</div>`;
+}
+function smetaText(){const rows=window.__rows||[];let t='СМЕТА ЗАЩИТЫ ОБЪЕКТА ОТ БПЛА (предварительная)\n'+ctxLine()+'\n\n';rows.forEach(r=>{t+='• '+r[0]+' ('+r[1]+'): '+R(r[2])+' – '+R(r[3])+' ₽\n'});t+='\nИТОГО: '+R(window.__mn)+' – '+R(window.__mx)+' ₽\nРасчёт ±30%, не оферта. Точная смета — после обследования.\nDRONEBLOCK · droneblock.ru · +7 (930) 851-16-66';return t}
+function doPrint(){window.print()}
+function doShare(){const t=smetaText();if(navigator.share){navigator.share({title:'Смета защиты от БПЛА — DRONEBLOCK',text:t}).catch(()=>{})}else{doCopy()}}
+function doCopy(){const b=id('copybtn');const done=()=>{const old=b.textContent;b.textContent='✓ Скопировано';setTimeout(()=>{b.textContent=old},1800)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(smetaText()).then(done).catch(()=>{fallbackCopy();done()})}else{fallbackCopy();done()}}
+function fallbackCopy(){const ta=document.createElement('textarea');ta.value=smetaText();ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(ta)}
 calc();
 </script>
 </body></html>
